@@ -55,7 +55,7 @@
 
     <div class="container">
 
-      <h1>Trouvez un emploi facilement accessible en transports en commun !</h1>
+      <h2>Trouvez un emploi facilement accessible en transports en commun !</h2>
       <p>Proche Emploi permet de chercher les offres d'emploi en fonction du temps qu'il vous faudra pour vous y rendre.</p>
       
       <form id="search_form">
@@ -65,9 +65,8 @@
         </div>
       </form>
       
-      <div id="search_results">
-        
-      </div>
+      <ul class="thumbnails" id="search_results">
+      </ul>
 
     </div> <!-- /container -->
 
@@ -76,13 +75,42 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="/js/jquery.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
+    <script src="http://twitter.github.com/hogan.js/builds/2.0.0/hogan-2.0.0.js"></script>
+
     
     <!-- API libraries should go here -->
     <script src="/js/zijob.js"></script>
     
+    <script id="job_template" type="text/x-handlebars-template">
+        <li class="span4">
+          <div class="thumbnail">
+            <p align="center" style="">
+              <img src="{{company.logo.small}}" alt="" style="margin: auto;">
+            </p>
+            <h4>{{title}}</h4>
+            <p>{{category.value}}</p>
+            <address>
+              {{location.address}}<br>
+              {{location.postal_code}}
+            </address>
+            <p>Temps de trajet: {{time}}</p>
+            <p>Type de trajet: {{transport_type}}</p>
+            <p>Géoloc: ({{lat}}, {{long}})</p>
+          </div>
+        </li>
+    </script>
+
+    
     <!-- Core script -->
     
     <script type="text/javascript">
+    
+      // construct template string
+      var template = "Hello {{world}}!";
+      
+      // compile template
+      var job_template = Hogan.compile($("#job_template").html());
+
     
       $(document).ready(function() {
         $("#search_form").submit(function(e) {
@@ -97,7 +125,18 @@
             else {
               $('#search_results').html('');
               jobs.forEach(function(job) {
-                $('#search_results').append('<h4>' + job.title + '</h4>');
+                $('#search_results')
+                .append(job_template.render(job));
+                /*
+.append('<li class="span4"><div class="thumbnail">')
+                .append('<img src="' + job.company.logo.small + '">')
+                .append('<h4>' + job.title + ' &mdash;' + job.type.value + '</h4>')
+                .append('<p>' + job.category.value + '</p>')
+                .append('<p>' + job.location.address.toLowerCase() + '<br>' + job.location.postal_code + ' ' + job.location.city + '</p>')
+                .append('<p>Temps de trajet: ' + job.time + '</p>')
+                .append('<p>Type de transport: ' + job.transport_type + '</p>')
+                .append('</div></li>')
+*/
               })
             }
           })

@@ -96,6 +96,7 @@
     
     <!-- API libraries should go here -->
     <script src="/js/zijob.js"></script>
+    <script src="/js/sncf.js"></script>
     
     <script id="job_template" type="text/x-handlebars-template">
         <li class="span4">
@@ -113,6 +114,13 @@
             <p>Type de trajet: {{transport_type}}</p>
             <p>Lat/Lng: ({{lat}}, {{lng}})</p>
             <p>Lambert X/Y: ({{x}}, {{y}})</p>
+            <p>
+              <ul>
+                {{#stations.proximitylist}}
+                <li></li>
+                {{/stations.proximitylist}}
+              </ul>
+            </p>
           </div>
         </li>
     </script>
@@ -158,8 +166,15 @@
                     
                     job = $.extend(job, job_coords);
                     
-                    $('#search_results')
-                    .append(job_template.render(job));
+                    sncfNearbyStations(job.x, job.y, function(err, stations) {
+                    
+                      console.log(stations);
+                      
+                      $('#search_results')
+                      .append(job_template.render(job));
+                      
+                    });
+                    
                   });
                   
                 })
@@ -167,10 +182,6 @@
             })
             
           });
-          
-          // Call the ZiJob API
-          
-          
           
         })
       });

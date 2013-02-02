@@ -65,13 +65,13 @@
         <div class="control-group">
           <label class="control-label" for="postal_code">Code postal de votre domicile</label>
           <div class="controls">
-            <input type="text" id="postal_code" name="postal_code" placeholder="75001">
+            <input type="text" id="postal_code" name="postal_code" placeholder="75001" value="75001"><span class="help-inline" id="home_postal_code_lambert"></span>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="search_query">Poste recherché</label>
           <div class="controls">
-            <input type="text" id="search_query" class="" placeholder="vendeur">
+            <input type="text" id="search_query" class="" placeholder="vendeur" value="vendeur">
           </div>
         </div>
         <div class="form-actions">
@@ -91,6 +91,8 @@
     <script src="/js/bootstrap.min.js"></script>
     <script src="http://twitter.github.com/hogan.js/builds/2.0.0/hogan-2.0.0.js"></script>
 
+    <script src="/js/conversion.js"></script>
+    <script src="/js/geojob.js"></script>
     
     <!-- API libraries should go here -->
     <script src="/js/zijob.js"></script>
@@ -109,7 +111,8 @@
             </address>
             <p>Temps de trajet: {{time}}</p>
             <p>Type de trajet: {{transport_type}}</p>
-            <p>Géoloc: ({{lat}}, {{long}})</p>
+            <p>Lat/Lng: ({{lat}}, {{lng}})</p>
+            <p>Lambert X/Y: ({{x}}, {{y}})</p>
           </div>
         </li>
     </script>
@@ -132,28 +135,42 @@
           // Prevent form submission
           e.preventDefault();
           
+          // Test geoencoding
+          
+          // console.log($("#postal_code").val());
+          
+          getLamb2($("#postal_code").val(), function(home_coords) {
+          
+            // console.log(home_coords);
+                    
+            $('#home_postal_code_lambert')
+            .html(home_coords.x + "; " + home_coords.y);
+            
+            zijobKeywordSearch($("#search_query").val(), function(err, jobs) {
+              if (err) console.error(err);
+              else {
+              
+                $('#search_results').html('');
+                jobs.forEach(function(job) {
+                
+                  getLamb2(job.location.postal_code, function(job_coords) {
+                    // console.log(job_coords);
+                    
+                    job = $.extend(job, job_coords);
+                    
+                    $('#search_results')
+                    .append(job_template.render(job));
+                  });
+                  
+                })
+              }
+            })
+            
+          });
+          
           // Call the ZiJob API
           
-          zijobKeywordSearch($("#search_query").val(), function(err, jobs) {
-            if (err) console.error(err);
-            else {
-              $('#search_results').html('');
-              jobs.forEach(function(job) {
-                $('#search_results')
-                .append(job_template.render(job));
-                /*
-.append('<li class="span4"><div class="thumbnail">')
-                .append('<img src="' + job.company.logo.small + '">')
-                .append('<h4>' + job.title + ' &mdash;' + job.type.value + '</h4>')
-                .append('<p>' + job.category.value + '</p>')
-                .append('<p>' + job.location.address.toLowerCase() + '<br>' + job.location.postal_code + ' ' + job.location.city + '</p>')
-                .append('<p>Temps de trajet: ' + job.time + '</p>')
-                .append('<p>Type de transport: ' + job.transport_type + '</p>')
-                .append('</div></li>')
-*/
-              })
-            }
-          })
+          
           
         })
       });

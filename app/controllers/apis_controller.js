@@ -34,7 +34,34 @@ var TerSNCFService = restler.service(
         callback(err);
       })
       .on('fail', function(err, response) {
-        callback(new Error('Failed TER SNCF API call'));
+        callback(new Error('Failed TER SNCF API ProximityList call'));
+      })
+      .on('success', function(result, response) {
+      
+        // console.log(result);
+        
+        parseXML(result, callback);
+        
+      });
+    },
+    
+    getRouteList: function(start, end, options, callback) {
+      
+      // http://ms.api.ter-sncf.com/?action=RouteList&StopAreaExternalCode=OCE87391003;OCE87394007|and&CheckOrder=TRUE
+
+      
+      var request_options = { query: { "Action": "RouteList", "CheckOrder": "TRUE", "StopAreaExternalCode": start + ";" + end + "|and" } };
+      
+      // if (options.distance) request_options.query.Distance = distance;
+      
+      this
+      .get('http://ms.api.ter-sncf.com/', request_options)
+      .on('error', function(err, response) {
+        console.error(err);
+        callback(err);
+      })
+      .on('fail', function(err, response) {
+        callback(new Error('Failed TER SNCF API RouteList call'));
       })
       .on('success', function(result, response) {
       
@@ -44,6 +71,45 @@ var TerSNCFService = restler.service(
         
       });
     }, 
+    
+    getVehicleJourneyList: function(start, end, route_external_code, options, callback) {
+      
+      // http://ms.api.ter-sncf.com/?action=VehicleJourneyList&RouteExternalCode=OCETrainTER-87391003-87394007-1;xxx&StopAreaExternalCode=OCE87391003;OCE87394007|and&ShowStop=TRUE&StartTime=08|00&EndTime=10|10&Date=2013|02|05
+
+      
+      var request_options = { 
+        query: { 
+          "Action": "VehicleJourneyList", 
+          "ShowStop": "TRUE", 
+          "RouteExternalCode" : route_external_code,
+          "StopAreaExternalCode": start + ";" + end + "|and", 
+          "Date" : "2013|02|05", 
+          "StartTime": options.start_time || "05|00",
+          "EndTime"  : options.end_time   || "09|00"
+        } 
+      };
+      
+      // if (options.distance) request_options.query.Distance = distance;
+      
+      this
+      .get('http://ms.api.ter-sncf.com/', request_options)
+      .on('error', function(err, response) {
+        console.error(err);
+        callback(err);
+      })
+      .on('fail', function(err, response) {
+        callback(new Error('Failed TER SNCF API VehicleJourneyList call'));
+      })
+      .on('success', function(result, response) {
+      
+        // console.log(result);
+        
+        parseXML(result, callback);
+        
+      });
+    }, 
+    
+    
     
   }
   
@@ -126,12 +192,51 @@ ApisController.tersncfNearbyStations = function() {
       }
     });
   }
-
-  else if (self.param('category'))
-    self.response.json({ error: 'not enabled yet' });
   
   else
     self.response.json({ error: 'please specify x, y and optionally distance' });
+  
+}
+
+ApisController.tersncfRouteList = function() {
+  var self = this;
+  
+  if (self.param('start') && self.param('end')) { 
+    var options = self.param('options') || {};
+    tersncf.getRouteList(self.param('start'), self.param('end'), options, function(err, result) {
+      if (err) {
+        console.error(err);
+        self.response.json({ error: 'Parse XML reported error: ' + err });
+      } else {
+        // console.log(result);
+        self.response.json(result);
+      }
+    });
+  }
+  
+  else
+    self.response.json({ error: 'please specify start, end' });
+  
+}
+
+ApisController.tersncfVehicleJourneyList = function() {
+  var self = this;
+  
+  if (self.param('start') && self.param('end') && self.param('route')) { 
+    var options = self.param('options') || {};
+    tersncf.getVehicleJourneyList(self.param('start'), self.param('end'), self.param('route'), options, function(err, result) {
+      if (err) {
+        console.error(err);
+        self.response.json({ error: 'Parse XML reported error: ' + err });
+      } else {
+        // console.log(result);
+        self.response.json(result);
+      }
+    });
+  }
+  
+  else
+    self.response.json({ error: 'please specify start, end and route' });
   
 }
 

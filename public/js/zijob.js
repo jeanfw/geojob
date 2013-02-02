@@ -1,13 +1,12 @@
 function zijobKeywordSearch(keyword, callback) {
 
   // Call the API
-  $.get(
+  $.getJSON(
   
-    'http://www.zijob.fr/api/jobsearch', 
+    '/apis/zijob/jobsearch', 
     
-    { 
-      response_format: 'json', 
-      job_search_keyword: keyword  
+    {
+      keyword: keyword
     }
     
   )
@@ -15,12 +14,7 @@ function zijobKeywordSearch(keyword, callback) {
   // Success
   .done(function(data) {
     
-    var jobs = [];
-    
-    jobs = data.response.jobs.job;
-    
-    // Callback passing the data back
-    callback(null, jobs);
+    callback(null, data);
     
   })
   

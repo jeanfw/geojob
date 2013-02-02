@@ -60,7 +60,7 @@
       
       <form id="search_form">
         <div class="input-append">
-          <input type="text" id="search_query">
+          <input type="text" id="search_query" class="">
           <button class="btn" type="submit">Search</button>
         </div>
       </form>
@@ -95,7 +95,10 @@
           zijobKeywordSearch($("#search_query").val(), function(err, jobs) {
             if (err) console.error(err);
             else {
-              console.log(jobs);
+              $('#search_results').html('');
+              jobs.forEach(function(job) {
+                $('#search_results').append('<h4>' + job.title + '</h4>');
+              })
             }
           })
           

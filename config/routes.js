@@ -8,4 +8,5 @@
 module.exports = function routes() {
   this.root('pages#main');
   this.match('/apis/zijob/jobsearch', 'apis#zijob_job_search');
+  this.match('/apis/tersncf/nearby_stations', 'apis#tersncf_nearby_stations');
 }

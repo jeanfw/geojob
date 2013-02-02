@@ -5,13 +5,13 @@
          function(data){
           var coords = {};
          
-           coords.lat = data.query.results.Result.longitude;
-           coords.lng = data.query.results.Result.latitude;
+           coords.lng = data.query.results.Result.longitude;
+           coords.lat = data.query.results.Result.latitude;
          
            var CoordSystem = 1;
            var la_Lambert = new Array();
            if (parseInt(CoordSystem, 10) != 6)
-             la_Lambert = WGS_ED50(coords.lat, coords.lng);
+             la_Lambert = WGS_ED50(coords.lng, coords.lat);
            else {
              console.error("Wrong coordinates from Yahoo! :(");
              la_Lambert[0] = 6.346528978762258;

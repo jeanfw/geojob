@@ -71,7 +71,7 @@
         <div class="control-group">
           <label class="control-label" for="search_query">Poste recherché</label>
           <div class="controls">
-            <input type="text" id="search_query" class="" placeholder="vendeur" value="vendeur">
+            <input type="text" id="search_query" class="" placeholder="vendeur" value="commercial">
           </div>
         </div>
         <div class="form-actions">
@@ -108,7 +108,7 @@
             <p>{{category.value}}</p>
             <address>
               {{location.address}}<br>
-              {{location.postal_code}}
+              {{location.postal_code}} {{location.city}}
             </address>
             <p>Temps de trajet: {{time}}</p>
             <p>Type de trajet: {{transport_type}}</p>
@@ -116,9 +116,9 @@
             <p>Lambert X/Y: ({{x}}, {{y}})</p>
             <p>
               <ul>
-                {{#stations.proximitylist}}
-                <li></li>
-                {{/stations.proximitylist}}
+                {{#stations}}
+                <li>{{stop_point.StopPointName}} - {{stop_point.Mode.ModeName}} - {{stop_point.Mode.ModeName}} ({{distance}}m)</li>
+                {{/stations}}
               </ul>
             </p>
           </div>
@@ -169,6 +169,8 @@
                     sncfNearbyStations(job.x, job.y, function(err, stations) {
                     
                       console.log(stations);
+                      
+                      job.stations = stations;
                       
                       $('#search_results')
                       .append(job_template.render(job));

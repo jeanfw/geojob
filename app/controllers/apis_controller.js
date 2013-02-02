@@ -25,7 +25,9 @@ var TerSNCFService = restler.service(
       
       var request_options = { query: { "Action": "ProximityList", "Type": "StopPoint", "X": x, "Y": y } };
       
-      if (options.distance) request_options.query.Distance = distance;
+      request_options.query.Distance = options.distance || 10000;
+      
+      console.log(request_options);
       
       this
       .get('http://ms.api.ter-sncf.com/', request_options)
@@ -180,9 +182,12 @@ ApisController.zijobJobSearch = function() {
 ApisController.tersncfNearbyStations = function() {
   var self = this;
   
-  if (self.param('x') && self.param('y')) { 
-    var options = self.param('distance') || {};
-    tersncf.getNearbyStations(self.param('x'), self.param('y'), options, function(err, result) {
+  
+  if (self.param('x') && self.param('y')) {
+    
+    // console.log(options);
+    
+    tersncf.getNearbyStations(self.param('x'), self.param('y'), {}, function(err, result) {
       if (err) {
         console.error(err);
         self.response.json({ error: 'Parse XML reported error: ' + err });
@@ -202,7 +207,7 @@ ApisController.tersncfRouteList = function() {
   var self = this;
   
   if (self.param('start') && self.param('end')) { 
-    var options = self.param('options') || {};
+    var options = {};
     tersncf.getRouteList(self.param('start'), self.param('end'), options, function(err, result) {
       if (err) {
         console.error(err);

@@ -58,10 +58,24 @@
       <h2>Trouvez un emploi facilement accessible en transports en commun !</h2>
       <p>Proche Emploi permet de chercher les offres d'emploi en fonction du temps qu'il vous faudra pour vous y rendre.</p>
       
-      <form id="search_form">
-        <div class="input-append">
-          <input type="text" id="search_query" class="">
-          <button class="btn" type="submit">Search</button>
+      <form class="form-horizontal">
+      </form>
+      
+      <form class="form-horizontal" id="search_form">
+        <div class="control-group">
+          <label class="control-label" for="postal_code">Code postal de votre domicile</label>
+          <div class="controls">
+            <input type="text" id="postal_code" name="postal_code" placeholder="75001">
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="search_query">Poste recherché</label>
+          <div class="controls">
+            <input type="text" id="search_query" class="" placeholder="vendeur">
+          </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Trouvez-moi un emploi !</button>
         </div>
       </form>
       

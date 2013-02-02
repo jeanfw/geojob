@@ -9,13 +9,12 @@
     <meta name="author" content="">
 
     <!-- Le styles -->
-    <link href="/css/bootstrap.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
     <style>
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
     </style>
-    <link href="/css/bootstrap-responsive.css" rel="stylesheet">
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -32,7 +31,7 @@
 
   <body>
 
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -58,25 +57,54 @@
 
       <h1>Trouvez un emploi facilement accessible en transports en commun !</h1>
       <p>Proche Emploi permet de chercher les offres d'emploi en fonction du temps qu'il vous faudra pour vous y rendre.</p>
+      
+      <form id="search_form">
+        <div class="input-append">
+          <input type="text" id="search_query">
+          <button class="btn" type="submit">Search</button>
+        </div>
+      </form>
+      
+      <div id="search_results">
+        
+      </div>
 
     </div> <!-- /container -->
 
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/js/jquery.js"></script>
-    <script src="/js/bootstrap-transition.js"></script>
-    <script src="/js/bootstrap-alert.js"></script>
-    <script src="/js/bootstrap-modal.js"></script>
-    <script src="/js/bootstrap-dropdown.js"></script>
-    <script src="/js/bootstrap-scrollspy.js"></script>
-    <script src="/js/bootstrap-tab.js"></script>
-    <script src="/js/bootstrap-tooltip.js"></script>
-    <script src="/js/bootstrap-popover.js"></script>
-    <script src="/js/bootstrap-button.js"></script>
-    <script src="/js/bootstrap-collapse.js"></script>
-    <script src="/js/bootstrap-carousel.js"></script>
-    <script src="/js/bootstrap-typeahead.js"></script>
-
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    
+    <!-- API libraries should go here -->
+    <script src="/js/zijob.js"></script>
+    
+    <!-- Core script -->
+    
+    <script type="text/javascript">
+    
+      $(document).ready(function() {
+        $("#search_form").submit(function(e) {
+          
+          // Prevent form submission
+          e.preventDefault();
+          
+          // Call the ZiJob API
+          
+          zijobKeywordSearch($("#search_query").val(), function(err, jobs) {
+            if (err) console.error(err);
+            else {
+              console.log(jobs);
+            }
+          })
+          
+        })
+      });
+    
+    </script>
+    
+    <!-- /Core script -->
+    
   </body>
 </html>

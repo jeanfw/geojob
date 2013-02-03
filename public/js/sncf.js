@@ -1,27 +1,3 @@
-function cleanupXML(object) {
-  var clean = {};
-  
-  if ((typeof object == "object") && ('length' in object)) {
-    // Array
-    clean = (object.length == 1) ? cleanupXML(object[0]) : object.map(cleanupXML);
-  } else if (typeof object == "object") {
-    // Object but not array
-    Object.getOwnPropertyNames(object).forEach(function(property) {
-      if (property == "$") {
-        clean = $.extend(clean, cleanupXML(object[property]));
-      } else {
-        clean[property] = cleanupXML(object[property]);
-      }
-    });
-  } else {
-    // Neither an object nor an array, so let's just return it
-    clean = object;
-  }
-  
-  return clean;
-}
-
-
 function sncfNearbyStations(x, y, callback) {
 
   // Call the API
@@ -39,15 +15,9 @@ function sncfNearbyStations(x, y, callback) {
   // Success
   .done(function(data) {
   
-    var stations = [];
+    var stations = data.ActionProximityList.ProximityList.Proximity || [];
     
-    // array d'objets [ { distance: 830, station: { city: ... , etc } } ]
-  
-    // console.log(data);
-    
-    stations = cleanupXML(data).ActionProximityList.ProximityList.Proximity;
-    
-    console.log(stations);
+    // console.log(stations);
     
     callback(null, stations);
     
@@ -84,9 +54,7 @@ function sncfRouteList(start, end, callback) {
   
     // console.log(data);
   
-    var routes = [];
-    
-    routes = cleanupXML(data).ActionRouteList.RouteList.Route;
+    var routes = data.ActionRouteList.RouteList.Route || [];
     
     // console.log(routes);
     

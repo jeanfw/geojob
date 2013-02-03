@@ -2,6 +2,44 @@ var locomotive = require('locomotive')
   , Controller = locomotive.Controller
   , restler    = require('restler')
   , parseXML   = require('xml2js').parseString;
+  
+function cleanupJSON(object) {
+  var clean = {};
+  
+  if ((typeof object == "object") && ('length' in object)) {
+    // Array
+    clean = (object.length == 1) ? cleanupJSON(object[0]) : object.map(cleanupJSON);
+  } else if (typeof object == "object") {
+    // Object but not array
+    Object.getOwnPropertyNames(object).forEach(function(property) {
+      if (property == "$") {
+        // clean = cleanupJSON(object[property]);
+        Object.getOwnPropertyNames(object[property]).forEach(function(subproperty) {
+          clean[subproperty] = cleanupJSON(object[property][subproperty]);
+        })
+      } else {
+        clean[property] = cleanupJSON(object[property]);
+      }
+    });
+  } else {
+    // Neither an object nor an array, so let's just return it
+    clean = object;
+  }
+  
+  return clean;
+}
+
+function parseAndcleanupXML(xml, callback) {
+  parseXML(xml, function(err, dirty_json) {
+    if (err) 
+      callback(err);
+    else {
+      console.log(dirty_json);
+      var clean_json = cleanupJSON(dirty_json);
+      callback(null, clean_json);
+    }
+  })
+}
 
 var ApisController = new Controller();
 
@@ -42,7 +80,7 @@ var TerSNCFService = restler.service(
       
         // console.log(result);
         
-        parseXML(result, callback);
+        parseAndcleanupXML(result, callback);
         
       });
     },
@@ -69,7 +107,7 @@ var TerSNCFService = restler.service(
       
         // console.log(result);
         
-        parseXML(result, callback);
+        parseAndcleanupXML(result, callback);
         
       });
     }, 
@@ -106,7 +144,7 @@ var TerSNCFService = restler.service(
       
         // console.log(result);
         
-        parseXML(result, callback);
+        parseAndcleanupXML(result, callback);
         
       });
     }, 

@@ -117,7 +117,7 @@
             <p>
               <ul>
                 {{#stations}}
-                <li>{{stop_point.StopPointName}} - {{stop_point.Mode.ModeName}} - {{stop_point.Mode.ModeName}} ({{distance}}m)</li>
+                <li>{{StopPoint.StopPointName}} - {{StopPoint.Mode.ModeName}} - {{StopPoint.Mode.ModeName}} ({{Distance}}m)</li>
                 {{/stations}}
               </ul>
             </p>
@@ -154,34 +154,53 @@
             $('#home_postal_code_lambert')
             .html(home_coords.x + "; " + home_coords.y);
             
-            zijobKeywordSearch($("#search_query").val(), function(err, jobs) {
-              if (err) console.error(err);
-              else {
-              
-                $('#search_results').html('');
-                jobs.forEach(function(job) {
+            sncfNearbyStations(home_coords.x, home_coords.y, function(err, home_stations) {
+            
+              console.log(home_stations);
+            
+              zijobKeywordSearch($("#search_query").val(), function(err, jobs) {
+                if (err) console.error(err);
+                else {
                 
-                  getLamb2(job.location.postal_code, function(job_coords) {
-                    // console.log(job_coords);
-                    
-                    job = $.extend(job, job_coords);
-                    
-                    sncfNearbyStations(job.x, job.y, function(err, stations) {
-                    
-                      console.log(stations);
+                  $('#search_results').html('');
+                  jobs.forEach(function(job) {
+                  
+                    getLamb2(job.location.postal_code, function(job_coords) {
+                      // console.log(job_coords);
                       
-                      job.stations = stations;
+                      job = $.extend(job, job_coords);
                       
-                      $('#search_results')
-                      .append(job_template.render(job));
+                      sncfNearbyStations(job.x, job.y, function(err, stations) {
+                      
+                        // console.log(stations);
+                        
+                        job.stations = stations;
+                        
+                        job.routes = [];
+                        
+                        // for (start in home_stations) {
+                          for (end in job.stations) {
+                            sncfRouteList(home_stations[0].StopPoint.StopArea.StopAreaExternalCode, home_stations[end].StopPoint.StopArea.StopAreaExternalCode, 
+                              function(err, routes) {
+                                console.log(routes);
+                                job.routes = job.routes.concat(routes);
+                              }
+                            );
+                          }
+                        // }
+                        
+                        $('#search_results')
+                        .append(job_template.render(job));
+                        
+                      });
                       
                     });
                     
-                  });
-                  
-                })
-              }
-            })
+                  })
+                }
+              })
+            
+            });
             
           });
           

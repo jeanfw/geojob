@@ -43,26 +43,54 @@ function sncfNearbyStations(x, y, callback) {
     
     // array d'objets [ { distance: 830, station: { city: ... , etc } } ]
   
-    console.log(data);
-  
-    var proximity = data.ActionProximityList.ProximityList[0].Proximity || [];
+    // console.log(data);
     
-    stations = proximity.map(function(proximityItem) {
-    
-      var stop_point = {};
-      var stop_point_dirty = proximityItem.StopPoint[0];
-      
-      stop_point = cleanupXML(stop_point_dirty);
-      
-      return {
-        distance: proximityItem.$.Distance,
-        stop_point: stop_point
-      }
-    });
+    stations = cleanupXML(data).ActionProximityList.ProximityList.Proximity;
     
     console.log(stations);
     
     callback(null, stations);
+    
+  })
+  
+  // Handle failed queries
+  .fail(function(data, response) {
+  
+    // Callback with error
+    callback(response);
+    
+  });
+  
+  
+}
+
+
+function sncfRouteList(start, end, callback) {
+
+  // Call the API
+  $.getJSON(
+  
+    '/apis/tersncf/route_list', 
+    
+    {
+      start: start,
+      end  : end
+    }
+    
+  )
+  
+  // Success
+  .done(function(data) {
+  
+    // console.log(data);
+  
+    var routes = [];
+    
+    routes = cleanupXML(data).ActionRouteList.RouteList.Route;
+    
+    // console.log(routes);
+    
+    callback(null, routes);
     
   })
   

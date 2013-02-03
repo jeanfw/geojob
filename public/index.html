@@ -53,7 +53,7 @@
           <a class="brand" href="/">Proche Emploi !</a>
           
           <form class="navbar-form pull-left" id="search_form">
-            <input class="input-small" type="text" id="postal_code" name="postal_code" placeholder="code postal (ex. 75001)" value="75001">
+            <input class="input-small" type="text" id="postal_code" name="postal_code" placeholder="code postal (ex. 75001)" value="44200">
             <input type="text" id="search_query" class="" placeholder="vendeur" value="commercial">
             <button type="submit" class="btn">Get me a job!</button>
             <span class="help-inline hidden" id="status"><img src="/img/loading.gif"><span id="status_text"></span>
@@ -217,23 +217,6 @@
                       job = $.extend(job, job_coords);
                     
                       // loadingStatus("Recherche de gares proches des offres...");
-                        
-                      markerLayer.add_feature({
-                          geometry: {
-                              // The order of coordinates here is lon, lat. This is because
-                              // we use the GeoJSON specification for all marker features.
-                              // (lon, lat is also the internal order of KML and other geographic formats)
-                              coordinates: [job.lng, job.lat]
-                          },
-                          properties: {
-                              // these properties customize the look of the marker
-                              // see the simplestyle-spec for a full reference:
-                              // https://github.com/mapbox/simplestyle-spec
-                              'marker-color': '#036',
-                              'marker-symbol': 'commercial',
-                              title: "A " + job.time + " minutes en train"
-                          }
-                      });
                       
                       sncfNearbyStations(job.x, job.y, function(err, stations) {
                       
@@ -245,23 +228,87 @@
                         
                         // loadingStatus("Recherche croisée sur " + home_stations.length*job.stations.length + " stations...");
                         
-                        for (start in home_stations) {
-                          for (end in job.stations) {
+                        for (var start in home_stations) {
+                          for (var end in job.stations) {
                             if (home_stations[start].StopPoint && job.stations[end].StopPoint) 
-                              sncfRouteList(
+                              /*
+sncfRouteList(
                                 home_stations[start].StopPoint.StopArea.StopAreaExternalCode, 
                                 job.stations[end].StopPoint.StopArea.StopAreaExternalCode, 
                                 function(err, routes) {
                                   if (err) console.error(err);
                                   else {
                                     job.routes = job.routes.concat(routes);
-                                    console.log(routes.length 
+*/
+                                    
+                                    // console.log(job.routes.join(';'));
+                                    // Log it 
+                                    /*
+console.log(routes.length 
                                       + ' routes found from ' 
                                       + home_stations[start].StopPoint.StopArea.StopAreaName 
                                       + ' to ' 
                                       + job.stations[end].StopPoint.StopArea.StopAreaName)
-                                  }
-                                });
+*/
+                                    
+                                    // Make the calls
+                                    // if (routes.length > 0) 
+                                    sncfVehicleJourney(
+                                      home_stations[start].StopPoint.StopArea.StopAreaExternalCode, 
+                                      job.stations[end].StopPoint.StopArea.StopAreaExternalCode, 
+                                      "",
+                                      function(err, journeys) {
+                                        if (journeys.length > 0) {
+                                          
+                                          // console.log(journeys);
+                                        
+                                          var minimum_time = 86400;
+                                          var shortest_journey = {};
+                                          
+                                          journeys
+                                          .forEach(function(journey) { 
+                                            if ((journey.journey_time_seconds > 0) && (journey.journey_time_seconds < minimum_time)) 
+                                              shortest_journey = journey; 
+                                          }) 
+                                          
+                                          if (shortest_journey.journey_time_seconds) {
+                                            console.log("Found a shortest journey, which takes" + shortest_journey.journey_time_seconds); 
+                                            console.log(shortest_journey);
+                                            
+                                            markerLayer.add_feature({
+                                                geometry: {
+                                                    // The order of coordinates here is lon, lat. This is because
+                                                    // we use the GeoJSON specification for all marker features.
+                                                    // (lon, lat is also the internal order of KML and other geographic formats)
+                                                    coordinates: [job.lng, job.lat]
+                                                },
+                                                properties: {
+                                                    // these properties customize the look of the marker
+                                                    // see the simplestyle-spec for a full reference:
+                                                    // https://github.com/mapbox/simplestyle-spec
+                                                    'marker-color': '#036',
+                                                    'marker-symbol': 'commercial',
+                                                    title: "A " + shortest_journey.journey_time_seconds/60 + " minutes en train"
+                                                }
+                                            });
+                                          } else {
+                                            
+                                            // no shortest journey
+                                            // probably means the journeys are in the wrong order
+                                            
+                                          }                                  
+                                          
+                                        
+                                        } else {
+                                          
+                                          // no journeys found
+                                          // maybe recolor the job
+                                          
+                                        }
+                                      }
+                                    )
+                                  // }
+                                // });
                             else
                               console.log("No stations for " + job.location.postal_code);
                           }

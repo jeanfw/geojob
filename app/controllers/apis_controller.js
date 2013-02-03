@@ -265,9 +265,9 @@ ApisController.tersncfRouteList = function() {
 ApisController.tersncfVehicleJourneyList = function() {
   var self = this;
   
-  if (self.param('start') && self.param('end') && self.param('route')) { 
+  if (self.param('start') && self.param('end')) { 
     var options = self.param('options') || {};
-    tersncf.getVehicleJourneyList(self.param('start'), self.param('end'), self.param('route'), options, function(err, result) {
+    tersncf.getVehicleJourneyList(self.param('start'), self.param('end'), self.param('route') || "", options, function(err, result) {
       if (err) {
         console.error(err);
         self.response.json({ error: 'Parse XML reported error: ' + err });

@@ -172,7 +172,7 @@ var ZijobService = restler.service(
     keywordSearch: function(keyword, callback) {
       
       this
-      .get('http://www.zijob.fr/api/jobsearch', { query: { "response_format": "json", job_search_keyword: keyword }})
+      .get('http://www.zijob.fr/api/jobsearch', { query: { "response_format": "json", job_search_keyword: keyword, job_search_limit: 30 }})
       .on('error', function(err, response) {
         console.error(err);
         callback(err);

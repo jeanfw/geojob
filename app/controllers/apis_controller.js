@@ -169,10 +169,10 @@ var ZijobService = restler.service(
   
   {
     
-    keywordSearch: function(keyword, callback) {
+    keywordSearch: function(keyword, region, callback) {
       
       this
-      .get('http://www.zijob.fr/api/jobsearch', { query: { "response_format": "json", job_search_keyword: keyword, job_search_limit: 30 }})
+      .get('http://www.zijob.fr/api/jobsearch', { query: { "response_format": "json", job_search_keyword: keyword, job_search_limit: 30, job_search_location: region }})
       .on('error', function(err, response) {
         console.error(err);
         callback(err);
@@ -200,8 +200,8 @@ var tersncf = new TerSNCFService();
 ApisController.zijobJobSearch = function() {
   var self = this;
   
-  if (self.param('keyword'))
-    zijob.keywordSearch(self.param('keyword'), function(err, result) {
+  if (self.param('keyword') && self.param('region'))
+    zijob.keywordSearch(self.param('keyword'), self.param('region'), function(err, result) {
       if (err) console.error(err);
       else {
         console.log(result);
@@ -213,7 +213,7 @@ ApisController.zijobJobSearch = function() {
     self.response.json({ error: 'not enabled yet' });
   
   else
-    self.response.json({ error: 'please specify a keyword' });
+    self.response.json({ error: 'please specify a keyword and region' });
   
 }
 

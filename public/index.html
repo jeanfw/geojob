@@ -10,7 +10,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Proche Emploi</title>
+    <title>MobiPro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -30,6 +30,8 @@
     <style>
       body { margin:0; padding:0; }
       #map { position:absolute; top:40px; bottom:0; width:100%; }
+      #map_overlay { position:absolute; top:40px; bottom:0; width:100%; /* background: rgba(0,0,0,0.2); */ }
+      #map_overlay_inner { position: relative; margin: 100px auto; text-align: center; vertical-align: middle; width: 300px; height: 100px; background: rgba(100,100,100,0.8); border-radius: 5px; color: white; padding: 5px; }
     </style>
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -50,13 +52,12 @@
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="/">Proche Emploi !</a>
+          <a class="brand" href="/" style="color: #369"><strong>Mobi<span style="color: #d00">Pro</span></strong></a>
           
           <form class="navbar-form pull-left" id="search_form">
-            <input class="input-small" type="text" id="postal_code" name="postal_code" placeholder="code postal (ex. 75001)" value="44200">
+            <input class="" type="text" id="postal_code" name="postal_code" placeholder="code postal (ex. 75001)" value="44200">
             <input type="text" id="search_query" class="" placeholder="vendeur" value="commercial">
-            <button type="submit" class="btn">Get me a job!</button>
-            <span class="help-inline hidden" id="status"><img src="/img/loading.gif"><span id="status_text"></span>
+            <button type="submit" class="btn btn-primary">Simplifiez ma mobilité !</button>
           </form>
         </div>
       </div>
@@ -70,19 +71,21 @@
     </div> <!-- /container -->
     
     <div id='map'></div>
+    
+    <div id='map_overlay'>
+      
+      <div id='map_overlay_inner' class="hidden">
+        <br>
+        <img src="/img/loading.gif"><br>
+        <h4><span id="status_text">En cours de chargement</span></h4>
+      </div>
+      
+    </div>
+    
     <script>
       
       var map = mapbox.map('map');
       map.addLayer(mapbox.layer().id('jeanfw.map-5gaf13cm'));
-      
-      // Create an empty markers layer
-      var markerLayer = mapbox.markers.layer();
-    
-      // Add interaction to this marker layer. This
-      // binds tooltips to each marker that has title
-      // and description defined.
-      mapbox.markers.interaction(markerLayer);
-      map.addLayer(markerLayer);
     
       map.zoom(6).center({ lat: 46.85, lon: 2.30 });
     
@@ -107,32 +110,24 @@
     <!-- API libraries should go here -->
     <script src="/js/zijob.js"></script>
     <script src="/js/sncf.js"></script>
+    <script src="/js/region.js"></script>
     
     <script id="job_template" type="text/x-handlebars-template">
-        <li class="span4">
-          <div class="thumbnail">
-            <p align="center" style="">
-              <img src="{{company.logo.small}}" alt="" style="margin: auto;">
-            </p>
-            <h4>{{title}}</h4>
-            <p>{{category.value}}</p>
-            <address>
-              {{location.address}}<br>
-              {{location.postal_code}} {{location.city}}
-            </address>
-            <p>Temps de trajet: {{time}}</p>
-            <p>Type de trajet: {{transport_type}}</p>
-            <p>Lat/Lng: ({{lat}}, {{lng}})</p>
-            <p>Lambert X/Y: ({{x}}, {{y}})</p>
-            <p>
-              <ul>
-                {{#stations}}
-                <li>{{StopPoint.StopPointName}} - {{StopPoint.Mode.ModeName}} - {{StopPoint.Mode.ModeName}} ({{Distance}}m)</li>
-                {{/stations}}
-              </ul>
-            </p>
-          </div>
-        </li>
+      <table>
+        <tr>
+          <td align="left">
+            <strong>{{minutes}} minutes</strong> <span class="badge">{{shortest_journey.modetype.ModeTypeName}}</span>
+          </td>
+          <td width="60">
+            <img src="{{company.logo.small}}" alt="" width="60" align="right">
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <p align="center">{{title}}<br>{{category.value}}</p>
+          </td>
+        </tr>
+      </table>
     </script>
 
     
@@ -147,13 +142,19 @@
       var job_template = Hogan.compile($("#job_template").html());
 
       function loadingStatus(text) {
-        $('#status').removeClass('hidden');
         $('#status_text').html(text);
       }
       
       function finishedLoading() {
-        $('#status').addClass('hidden');
+        $('#map_overlay_inner').addClass('hidden');
+        $('#map').css('z-index',10);
       }
+      
+      function startLoading() {
+        $('#map_overlay_inner').removeClass('hidden');
+      }
+      
+      var layers = [];
     
       $(document).ready(function() {
         $("#search_form").submit(function(e) {
@@ -161,11 +162,24 @@
           // Prevent form submission
           e.preventDefault();
           
+          // Create an empty markers layer
+          var markerLayer = mapbox.markers.layer($("#postal_code").val()+"_"+$("#search_query").val());
+          
+          markerLayer.key(function(f) { return f.properties.id; });
+        
+          // Add interaction to this marker layer. This
+          // binds tooltips to each marker that has title
+          // and description defined.
+          mapbox.markers.interaction(markerLayer);
+          map.addLayer(markerLayer);
+          
           // Test geoencoding
           
           // console.log($("#postal_code").val());
           
-          // loadingStatus("Nous vous localisons...");
+          startLoading();
+          
+          loadingStatus("Nous vous localisons...");
           
           map.ease.location({ lat: 46.85, lon: 2.30 }).zoom(6).optimal();
 
@@ -183,38 +197,69 @@
                     // these properties customize the look of the marker
                     // see the simplestyle-spec for a full reference:
                     // https://github.com/mapbox/simplestyle-spec
-                    'marker-color': '#fc0',
-                    'marker-symbol': 'star-stroked',
-                    title: "Votre domicile"
+                    'marker-color': '#fff',
+                    'marker-symbol': 'star-stroked'
                 }
             });
+            
+            map.ease.location({ lat: home_coords.lat, lon: home_coords.lng }).zoom(8).optimal();
           
             // console.log(home_coords);
                     
             $('#home_postal_code_lambert')
             .html(home_coords.x + "; " + home_coords.y);
+            
+            
+            home_coords.region = Dep_to_region[$("#postal_code").val().substr(0, 2)].region;
+            // console.log(home_coords.region);
           
-            // loadingStatus("Gares près de votre domicile...");
+            loadingStatus("Où sont les gares SNCF?");
             
             sncfNearbyStations(home_coords.x, home_coords.y, function(err, home_stations) {
             
               // console.log(home_stations);
           
-              // loadingStatus("Recherche d'offres d'emploi...");
+              loadingStatus("Recherche d'offres d'emploi...");
+              
+              
             
-              zijobKeywordSearch($("#search_query").val(), function(err, jobs) {
+              zijobKeywordSearch($("#search_query").val(), home_coords.region, function(err, jobs) {
                 if (err) console.error(err);
                 else {
                 
-                  // loadingStatus("Cartographie des offres d'emploi...");
+                  loadingStatus("On vous trouve des offres d'emploi dans votre région...");
                   
                   $('#search_results').html('');
                   jobs.forEach(function(job) {
+                  
+                    job.minimum_time = 86400;
+                    job.shortest_journey = {};
                   
                     getLamb2(job.location.postal_code, function(job_coords) {
                       // console.log(job_coords);
                       
                       job = $.extend(job, job_coords);
+                    
+                      /*
+markerLayer.add_feature({
+                          geometry: {
+                              // The order of coordinates here is lon, lat. This is because
+                              // we use the GeoJSON specification for all marker features.
+                              // (lon, lat is also the internal order of KML and other geographic formats)
+                              coordinates: [job.lng, job.lat]
+                          },
+                          properties: {
+                              // these properties customize the look of the marker
+                              // see the simplestyle-spec for a full reference:
+                              // https://github.com/mapbox/simplestyle-spec
+                              'marker-color': '#369',
+                              'marker-symbol': 'commercial',
+                              title: "Trajet en cours de recherche", 
+                              id: job.id
+                              
+                          }
+                      });
+*/
                     
                       // loadingStatus("Recherche de gares proches des offres...");
                       
@@ -224,91 +269,113 @@
                         
                         job.stations = stations;
                         
-                        job.routes = [];
+                        job.journeys = [];
                         
-                        // loadingStatus("Recherche croisée sur " + home_stations.length*job.stations.length + " stations...");
+                        loadingStatus("Recherche des temps de trajet en TER et Corail...");
                         
-                        for (var start in home_stations) {
-                          for (var end in job.stations) {
+                        for (var start in home_stations.slice(0,3)) {
+                          for (var end in job.stations.slice(0,3)) {
                             if (home_stations[start].StopPoint && job.stations[end].StopPoint) 
-                              /*
-sncfRouteList(
+                              
+                              sncfVehicleJourney(
                                 home_stations[start].StopPoint.StopArea.StopAreaExternalCode, 
                                 job.stations[end].StopPoint.StopArea.StopAreaExternalCode, 
-                                function(err, routes) {
-                                  if (err) console.error(err);
-                                  else {
-                                    job.routes = job.routes.concat(routes);
-*/
+                                "",
+                                function(err, journeys) {
+                                
+                                  if (journeys.length > 0) {
                                     
-                                    // console.log(job.routes.join(';'));
-                                    // Log it 
-                                    /*
-console.log(routes.length 
-                                      + ' routes found from ' 
-                                      + home_stations[start].StopPoint.StopArea.StopAreaName 
-                                      + ' to ' 
-                                      + job.stations[end].StopPoint.StopArea.StopAreaName)
-*/
+                                    // console.log(journeys);
+                                  
+                                    var minimum_time = 86400;
+                                    var shortest_journey = {};
                                     
-                                    // Make the calls
-                                    // if (routes.length > 0) 
-                                    sncfVehicleJourney(
-                                      home_stations[start].StopPoint.StopArea.StopAreaExternalCode, 
-                                      job.stations[end].StopPoint.StopArea.StopAreaExternalCode, 
-                                      "",
-                                      function(err, journeys) {
-                                        if (journeys.length > 0) {
-                                          
-                                          // console.log(journeys);
-                                        
-                                          var minimum_time = 86400;
-                                          var shortest_journey = {};
-                                          
-                                          journeys
-                                          .forEach(function(journey) { 
-                                            if ((journey.journey_time_seconds > 0) && (journey.journey_time_seconds < minimum_time)) 
-                                              shortest_journey = journey; 
-                                          }) 
-                                          
-                                          if (shortest_journey.journey_time_seconds) {
-                                            console.log("Found a shortest journey, which takes" + shortest_journey.journey_time_seconds); 
-                                            console.log(shortest_journey);
-                                            
-                                            markerLayer.add_feature({
-                                                geometry: {
-                                                    // The order of coordinates here is lon, lat. This is because
-                                                    // we use the GeoJSON specification for all marker features.
-                                                    // (lon, lat is also the internal order of KML and other geographic formats)
-                                                    coordinates: [job.lng, job.lat]
-                                                },
-                                                properties: {
-                                                    // these properties customize the look of the marker
-                                                    // see the simplestyle-spec for a full reference:
-                                                    // https://github.com/mapbox/simplestyle-spec
-                                                    'marker-color': '#036',
-                                                    'marker-symbol': 'commercial',
-                                                    title: "A " + shortest_journey.journey_time_seconds/60 + " minutes en train"
-                                                }
-                                            });
-                                          } else {
-                                            
-                                            // no shortest journey
-                                            // probably means the journeys are in the wrong order
-                                            
-                                          }                                  
-                                          
-                                        
-                                        } else {
-                                          
-                                          // no journeys found
-                                          // maybe recolor the job
-                                          
-                                        }
+                                    journeys
+                                    .forEach(function(journey) { 
+                                      if ((journey.journey_time_seconds > 0) && (journey.journey_time_seconds < minimum_time)) 
+                                        shortest_journey = journey; 
+                                    }) 
+                                    
+                                    if (shortest_journey.journey_time_seconds) {
+                                      // console.log("Found a shortest journey, which takes" + shortest_journey.journey_time_seconds); 
+                                      // console.log(shortest_journey);
+                                      
+                                      // Color 
+                                      var minutes = shortest_journey.journey_time_seconds/60;
+                                      if (minutes > 60) {
+                                        color = "#E15417";
+                                      } else if (minutes > 45) {
+                                        color = "#FCF141";
+                                      } else if (minutes > 20) {
+                                        color = "#00FF00";
+                                      } else if (minutes > 10) {
+                                        color = "#79B837";
+                                      } else {
+                                        color = "#006400"
                                       }
-                                    )
-                                  // }
-                                // });
+                                      
+                                      job.shortest_journey = shortest_journey;
+                                      job.minutes = minutes;
+                                      
+                                      markerLayer.add_feature({
+                                          geometry: {
+                                              // The order of coordinates here is lon, lat. This is because
+                                              // we use the GeoJSON specification for all marker features.
+                                              // (lon, lat is also the internal order of KML and other geographic formats)
+                                              coordinates: [job.lng, job.lat]
+                                          },
+                                          properties: {
+                                              // these properties customize the look of the marker
+                                              // see the simplestyle-spec for a full reference:
+                                              // https://github.com/mapbox/simplestyle-spec
+                                              'marker-color': color,
+                                              description: job_template.render(job),
+                                              id: job.id
+                                              
+                                          }
+                                      });
+                                      
+                                      loadingStatus("Ok, on a trouvé !");
+                                      
+                                      setTimeout(function() {
+                                        finishedLoading();
+                                      }, 3000)
+                                    } else {
+                                      
+                                      // no shortest journey
+                                      // probably means the journeys are in the wrong order
+                                    }                                  
+                                    
+                                  
+                                  } else {
+                                    
+                                    // no journeys found
+                                    // maybe recolor the job
+                                      
+                                    /*
+markerLayer.add_feature({
+                                        geometry: {
+                                            // The order of coordinates here is lon, lat. This is because
+                                            // we use the GeoJSON specification for all marker features.
+                                            // (lon, lat is also the internal order of KML and other geographic formats)
+                                            coordinates: [job.lng, job.lat]
+                                        },
+                                        properties: {
+                                            // these properties customize the look of the marker
+                                            // see the simplestyle-spec for a full reference:
+                                            // https://github.com/mapbox/simplestyle-spec
+                                            'marker-color': "#f00",
+                                            'marker-symbol': 'cross',
+                                            title: "Pas de trajet possible", 
+                                            id: job.id
+                                            
+                                        }
+                                    });
+*/
+                                    
+                                  }
+                                }
+                              )
                             else
                               console.log("No stations for " + job.location.postal_code);
                           }
@@ -336,6 +403,9 @@ $('#search_results')
       });
     
     </script>
+    
+    
+    <img src="/img/ter.png" alt="" width="1" align="left" class="hidden">
     
     <!-- /Core script -->
     

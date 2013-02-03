@@ -1,4 +1,4 @@
-function zijobKeywordSearch(keyword, callback) {
+function zijobKeywordSearch(keyword, region, callback) {
 
   // Call the API
   $.getJSON(
@@ -6,7 +6,8 @@ function zijobKeywordSearch(keyword, callback) {
     '/apis/zijob/jobsearch', 
     
     {
-      keyword: keyword
+      keyword: keyword, 
+      region: region, 
     }
     
   )

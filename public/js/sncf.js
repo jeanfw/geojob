@@ -126,8 +126,8 @@ function sncfVehicleJourney(start, end, route, callback){
          });
          
          return {
-           line: VehicleJourneyItem.Line,
-           modetype: VehicleJourneyItem.ModeType,
+           line: VehicleJourneyItem.Route.Line,
+           modetype: VehicleJourneyItem.Route.Line.ModeType,
            all_stop: all_stops,
            start_stop: start_stop,
            end_stop: end_stop, 

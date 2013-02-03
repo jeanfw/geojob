@@ -75,7 +75,7 @@
           </div>
         </div>
         <div class="form-actions">
-            <button class="btn btn-primary" type="submit">Trouvez-moi un emploi !</button>
+            <button class="btn btn-primary" type="submit">Trouvez-moi un emploi !</button><span class="help-inline hidden" id="status"><img src="/img/loading.gif"><span id="status_text"></span></span>
         </div>
       </form>
       
@@ -136,6 +136,14 @@
       // compile template
       var job_template = Hogan.compile($("#job_template").html());
 
+      function loadingStatus(text) {
+        $('#status').removeClass('hidden');
+        $('#status_text').html(text);
+      }
+      
+      function finishedLoading() {
+        $('#status').addClass('hidden');
+      }
     
       $(document).ready(function() {
         $("#search_form").submit(function(e) {
@@ -147,21 +155,29 @@
           
           // console.log($("#postal_code").val());
           
+          // loadingStatus("Nous vous localisons...");
+          
           getLamb2($("#postal_code").val(), function(home_coords) {
           
             // console.log(home_coords);
                     
             $('#home_postal_code_lambert')
             .html(home_coords.x + "; " + home_coords.y);
+          
+            // loadingStatus("Gares près de votre domicile...");
             
             sncfNearbyStations(home_coords.x, home_coords.y, function(err, home_stations) {
             
-              console.log(home_stations);
+              // console.log(home_stations);
+          
+              // loadingStatus("Recherche d'offres d'emploi...");
             
               zijobKeywordSearch($("#search_query").val(), function(err, jobs) {
                 if (err) console.error(err);
                 else {
                 
+                  // loadingStatus("Cartographie des offres d'emploi...");
+                  
                   $('#search_results').html('');
                   jobs.forEach(function(job) {
                   
@@ -169,6 +185,8 @@
                       // console.log(job_coords);
                       
                       job = $.extend(job, job_coords);
+                    
+                      // loadingStatus("Recherche de gares proches des offres...");
                       
                       sncfNearbyStations(job.x, job.y, function(err, stations) {
                       
@@ -178,16 +196,18 @@
                         
                         job.routes = [];
                         
-                        // for (start in home_stations) {
+                        // loadingStatus("Recherche croisée sur " + home_stations.length*job.stations.length + " stations...");
+                        
+                        for (start in home_stations) {
                           for (end in job.stations) {
-                            sncfRouteList(home_stations[0].StopPoint.StopArea.StopAreaExternalCode, home_stations[end].StopPoint.StopArea.StopAreaExternalCode, 
+                            sncfRouteList(home_stations[start].StopPoint.StopArea.StopAreaExternalCode, job.stations[end].StopPoint.StopArea.StopAreaExternalCode, 
                               function(err, routes) {
-                                console.log(routes);
                                 job.routes = job.routes.concat(routes);
+                                console.log(routes.length + ' routes found from ' + home_stations[start].StopPoint.StopArea.StopAreaName + ' to ' + job.stations[end].StopPoint.StopArea.StopAreaName)
                               }
                             );
                           }
-                        // }
+                        }
                         
                         $('#search_results')
                         .append(job_template.render(job));
